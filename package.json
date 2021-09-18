@@ -1,17 +1,16 @@
 {
-  "name": "vue_autograph",
+  "name": "vue_autographs",
   "version": "1.0.0",
   "description": "签名",
-  "main": "dist/autograph.min.js",
+  "main": "dist/autographs.min.js",
   "author": "dong_yu",
   "license": "MIT",
-  "private":false,
+  "private": false,
   "scripts": {
     "dev": "cross-env NODE_ENV=development webpack-dev-server --open --hot",
     "build": "webpack --display-error-details --config webpack.config.js"
   },
-  "dependencies": {
-    "vue": "^2.5.11"
+  "dependencies": { 
   },
   "browserslist": [
     "> 1%",
@@ -38,7 +37,6 @@
     "vue-router": "^3.0.1",
     "vue-style-loader": "^3.0.3",
     "vue-template-compiler": "^2.5.9",
-    "vuex": "^3.0.1",
     "webpack": "^3.9.1",
     "webpack-dev-server": "^2.9.5"
   }

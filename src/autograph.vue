@@ -1,41 +1,36 @@
 <template>
   <div>
     <canvas id="canvas" width="650" height="650">此浏览器不支持canvas</canvas>
-    <div id="controller">
-      <div id="black_btn" class="color_btn color_btn_selected"></div>
-      <div id="blue_btn" class="color_btn"></div>
-      <div id="green_btn" class="color_btn"></div>
-      <div id="red_btn" class="color_btn"></div>
-      <div id="orange_btn" class="color_btn"></div>
-      <div id="yellow_btn" class="color_btn"></div>
+    <div id="controller" :style="{width:controllerW}">
+      <div id="black_btn" :class="['color_btn', colorType == 'black'?'color_selected':'']" @click="color_btn('black')"></div>
+      <div id="blue_btn"  :class="['color_btn', colorType == 'blue'?'color_selected':'']" @click="color_btn('blue')"></div>
+      <div id="green_btn" :class="['color_btn', colorType == 'green'?'color_selected':'']" @click="color_btn('green')"></div>
+      <div id="red_btn"  :class="['color_btn', colorType == 'red'?'color_selected':'']"  @click="color_btn('red')"></div>
+      <div id="orange_btn" :class="['color_btn', colorType == 'orange'?'color_selected':'']" @click="color_btn('orange')"></div>
+      <div id="yellow_btn"  :class="['color_btn', colorType == 'yellow'?'color_selected':'']" @click="color_btn('yellow')"></div>
       <div class="clearfix"></div>
     </div>
-    <div class="clearBox" id="controller">
-      <div id="clear_btn" class="op_btn">清除</div>
-    </div>
+    <div class="clearBox"   :style="{width:controllerW}">
+      <div id="clear_btn" class="op_btn" @click="clear_btn">清除</div>
+    </div>  
   </div>
 </template>
 <script>
 export default {
-  name: "editPC",
+  name: "editPc",
   data() {
-    return {};
+    return {
+      canvasWidth:0,   //画布宽度
+      canvasHeight:0,  //画布高度
+      context:null,
+      controllerW:0,  //调色板宽度
+      colorType:'black',
+      strokeColor:'black', 
+    };
   },
-  mounted() {
-    var src =
-      "https://s1.pstatp.com/cdn/expire-1-M/jquery/1.11.3/jquery.min.js";
-    var script_dom = document.createElement("script");
-    script_dom.src = src;
-    script_dom.language = "javascript";
-    script_dom.type = "text/javascript";
-    var head = document.getElementsByTagName("head").item(0); //这个是往本页面动态加载js脚本
-    head.appendChild(script_dom);
-
-    if (this.isMobile()) {
-      this.initApp();
-    } else {
-      this.init();
-    }
+  created() {},
+  mounted() {  
+    this.init();
   },
   methods: {
     isMobile() {
@@ -44,29 +39,67 @@ export default {
       );
       return (mobile = mobile ? true : false);
     },
-    initApp() {
+     
+    init() {
       let that = this;
-      var canvasWidth = Math.min(650, $(window).width() - 20);
-      var canvasHeight = canvasWidth;
-      var isMouseDown = false;
-      var lastLoc = { x: 0, y: 0 };
-      var strokeColor = "black";
-      var canvas = document.getElementById("canvas");
-      var context = canvas.getContext("2d");
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-      this.drawGrid(context, canvasWidth, canvasHeight);
-      $(" #controller").css("width", canvasWidth + "px");
-      $("#clear_btn").click(function() {
-        context.clearRect(0, 0, canvasWidth, canvasHeight);
-        that.drawGrid(context, canvasWidth, canvasHeight);
-      });
-      $(".color_btn").click(function(e) {
-        $(".color_btn").removeClass("color_btn_selected");
-        $(this).addClass("color_btn_selected");
-        strokeColor = $(this).css("background-color");
-      });
-      canvas.addEventListener("touchstart", function(e) {
+      let isMouseDown = false;
+      let lastLoc = { x: 0, y: 0 }; 
+      let canvas = document.getElementById("canvas");
+      this.canvasWidth = Math.min(650, $(window).width() - 20);
+      this.canvasHeight = this.canvasWidth; 
+      this.context = canvas.getContext("2d");
+      canvas.width = this.canvasWidth;
+      canvas.height = this.canvasHeight; 
+      this.drawGrid(this.context, this.canvasWidth, this.canvasHeight); 
+      this.controllerW = `${this.canvasWidth}px`  
+      if (this.isMobile()) {
+        this.app(isMouseDown, lastLoc, this.context, this.strokeColor);
+      } else {
+        this.web(isMouseDown, lastLoc, this.context, this.strokeColor);
+      }
+    },
+    clear_btn(){
+         this.context.clearRect(0, 0, this.canvasWidth, this.canvasHeight);
+        this.drawGrid(this.context, this.canvasWidth, this.canvasHeight);
+    },
+    color_btn(val){
+      this.colorType = val
+      this.strokeColor = val
+    },
+    web(isMouseDown, lastLoc, context) {
+      let that = this;
+      canvas.onmousedown = function (e) {
+        e.preventDefault();
+        isMouseDown = true;
+        lastLoc = that.windowToCanvas(e.clientX, e.clientY);
+      };
+      canvas.onmouseup = function (e) {
+        e.preventDefault();
+        isMouseDown = false;
+      };
+      canvas.onmouseout = function (e) {
+        e.preventDefault();
+        isMouseDown = false;
+      };
+      canvas.onmousemove = function (e) {
+        e.preventDefault();
+        if (isMouseDown) {
+          var curLoc = that.windowToCanvas(e.clientX, e.clientY);
+          context.beginPath();
+          context.moveTo(lastLoc.x, lastLoc.y);
+          context.lineTo(curLoc.x, curLoc.y);
+          context.strokeStyle = that.strokeColor;
+          context.lineWidth = 10;
+          context.lineCap = "round";
+          context.lineJoin = "round";
+          context.stroke();
+          lastLoc = curLoc;
+        }
+      };
+    },
+    app(isMouseDown, lastLoc, context, strokeColor) {
+      let that = this;
+      canvas.addEventListener("touchstart", function (e) {
         e.preventDefault();
         isMouseDown = true;
         lastLoc = that.windowToCanvas(
@@ -75,11 +108,11 @@ export default {
         );
       });
 
-      canvas.addEventListener("touchend", function(e) {
+      canvas.addEventListener("touchend", function (e) {
         e.preventDefault();
         isMouseDown = false;
       });
-      canvas.addEventListener("touchmove", function(e) {
+      canvas.addEventListener("touchmove", function (e) {
         e.preventDefault();
         if (isMouseDown) {
           var curLoc = that.windowToCanvas(
@@ -89,7 +122,7 @@ export default {
           context.beginPath();
           context.moveTo(lastLoc.x, lastLoc.y);
           context.lineTo(curLoc.x, curLoc.y);
-          context.strokeStyle = strokeColor;
+          context.strokeStyle = that.strokeColor;
           context.lineWidth = 10;
           context.lineCap = "round";
           context.lineJoin = "round";
@@ -97,58 +130,6 @@ export default {
           lastLoc = curLoc;
         }
       });
-    },
-    init() {
-      let that = this;
-      var canvasWidth = Math.min(650, $(window).width() - 20);
-      var canvasHeight = canvasWidth;
-      var isMouseDown = false;
-      var lastLoc = { x: 0, y: 0 };
-      var strokeColor = "black";
-      var canvas = document.getElementById("canvas");
-      var context = canvas.getContext("2d");
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-
-      this.drawGrid(context, canvasWidth, canvasHeight);
-      $(" #controller").css("width", canvasWidth + "px");
-      $("#clear_btn").click(function() {
-        context.clearRect(0, 0, canvasWidth, canvasHeight);
-        that.drawGrid(context, canvasWidth, canvasHeight);
-      });
-      $(".color_btn").click(function(e) {
-        $(".color_btn").removeClass("color_btn_selected");
-        $(this).addClass("color_btn_selected");
-        strokeColor = $(this).css("background-color");
-      });
-      canvas.onmousedown = function(e) {
-        e.preventDefault();
-        isMouseDown = true;
-        lastLoc = that.windowToCanvas(e.clientX, e.clientY);
-      };
-      canvas.onmouseup = function(e) {
-        e.preventDefault();
-        isMouseDown = false;
-      };
-      canvas.onmouseout = function(e) {
-        e.preventDefault();
-        isMouseDown = false;
-      };
-      canvas.onmousemove = function(e) {
-        e.preventDefault();
-        if (isMouseDown) {
-          var curLoc = that.windowToCanvas(e.clientX, e.clientY);
-          context.beginPath();
-          context.moveTo(lastLoc.x, lastLoc.y);
-          context.lineTo(curLoc.x, curLoc.y);
-          context.strokeStyle = strokeColor;
-          context.lineWidth = 10;
-          context.lineCap = "round";
-          context.lineJoin = "round";
-          context.stroke();
-          lastLoc = curLoc;
-        }
-      };
     },
     drawGrid(context, canvasWidth, canvasHeight) {
       context.save();
@@ -183,8 +164,8 @@ export default {
     windowToCanvas(x, y) {
       var bbox = canvas.getBoundingClientRect();
       return { x: Math.round(x - bbox.left), y: Math.round(y - bbox.top) };
-    }
-  }
+    },
+  },
 };
 </script>
 <style>
@@ -213,6 +194,10 @@ export default {
   font-family: Arial;
 }
 
+.clearBox{
+  margin: 0 auto;
+}
+
 .op_btn:hover {
   background: #def;
 }
@@ -237,7 +222,7 @@ export default {
 }
 
 /*默认边框*/
-.color_btn_selected {
+.color_selected {
   border: 5px solid blueviolet;
 }
 
