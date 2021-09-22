@@ -1,6 +1,6 @@
 {
   "name": "vue_autographs",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "签名",
   "main": "dist/autographs.min.js",
   "author": "dong_yu",
